@@ -53,6 +53,7 @@ class upsample_conv2d_and_predict_flow(nn.Module):
         conv = nn.functional.interpolate(conv,size=[shape[2]*2,shape[3]*2],mode='nearest')
         conv = self.pad(conv)
         conv = self.general_conv2d(conv)
+        conv = nn.Dropout(0.25)(conv)
 
         flow = self.predict_flow(conv) * 256.
         
@@ -68,13 +69,15 @@ def general_conv2d(in_channels,out_channels, ksize=3, strides=2, padding=1, do_b
                 nn.Conv2d(in_channels = in_channels,out_channels = out_channels,kernel_size = ksize,
                         stride=strides,padding=padding),
                 nn.ReLU(inplace=True),
-                nn.BatchNorm2d(out_channels,eps=1e-5,momentum=0.99)
+		            nn.BatchNorm2d(out_channels,eps=1e-5,momentum=0.99),
+                nn.Dropout(0.25)
             )
         else:
             conv2d = nn.Sequential(
                 nn.Conv2d(in_channels = in_channels,out_channels = out_channels,kernel_size = ksize,
                         stride=strides,padding=padding),
-                nn.ReLU(inplace=True)
+                nn.ReLU(inplace=True),
+                nn.Dropout(0.25)
             )
     elif activation == 'tanh':
         if do_batch_norm:
@@ -82,12 +85,14 @@ def general_conv2d(in_channels,out_channels, ksize=3, strides=2, padding=1, do_b
                 nn.Conv2d(in_channels = in_channels,out_channels = out_channels,kernel_size = ksize,
                         stride=strides,padding=padding),
                 nn.Tanh(),
-                nn.BatchNorm2d(out_channels,eps=1e-5,momentum=0.99)
+                nn.BatchNorm2d(out_channels,eps=1e-5,momentum=0.99),
+                nn.Dropout(0.25)
             )
         else:
             conv2d = nn.Sequential(
                 nn.Conv2d(in_channels = in_channels,out_channels = out_channels,kernel_size = ksize,
                         stride=strides,padding=padding),
-                nn.Tanh()
+                nn.Tanh(),
+                nn.Dropout(0.25)
             )
     return conv2d
